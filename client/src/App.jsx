@@ -44,11 +44,9 @@ export default function App() {
     const formData = new FormData();
     formData.append("file", file);
 
-    const response = await axios.post(
-      "https://document-summary-assistant-camd.onrender.com/api/extract",
-      formData,
-      { headers: { "Content-Type": "multipart/form-data" } }
-    );
+    const response = await axios.post("/api/extract", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
 
     setExtractedText(response.data.text);
   } catch (err) {
