@@ -72,7 +72,7 @@ app.post("/api/summarize", async (req, res) => {
     }
 
     const { pipeline } = await import("@xenova/transformers");
-    const summarizer = await pipeline("summarization", "facebook/bart-large-cnn");
+    const summarizer = await pipeline("summarization", "sshleifer/distilbart-cnn-6-6");
 
     let maxLen, minLen;
     if (length === "short") {
