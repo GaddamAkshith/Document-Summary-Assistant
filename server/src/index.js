@@ -40,14 +40,14 @@ app.post("/api/extract", upload.single("file"), async (req, res) => {
 app.post("/api/summarize", async (req, res) => {
   try {
     const { text, length } = req.body;
+
     if (!text || text.trim().length < 50) {
       return res.status(400).json({ error: "Text is too short to summarize." });
     }
+
     const { pipeline } = await import("@xenova/transformers");
-    const summarizer = await pipeline(
-      "summarization",
-      "Xenova/bart-large-cnn"
-    );
+    const summarizer = await pipeline("summarization", "facebook/bart-large-cnn");
+
     let maxLen, minLen;
     if (length === "short") {
       minLen = 50;
@@ -59,16 +59,20 @@ app.post("/api/summarize", async (req, res) => {
       minLen = 250;
       maxLen = 500;
     }
+
     const result = await summarizer(text, {
       min_length: minLen,
       max_length: maxLen,
       no_repeat_ngram_size: 3,
     });
+
     res.json({ summary: result[0].summary_text });
+
   } catch (error) {
     console.error(" Summary generation error:", error);
     return res.status(500).json({ error: "Summarization failed." });
   }
 });
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(` Server running on port ${PORT}`));
