@@ -33,50 +33,53 @@ export default function App() {
   });
 
   const handleUpload = async () => {
-    if (!file) return setError("Please select a file first!");
+  if (!file) return setError("Please select a file first!");
 
-    try {
-      setLoading(true);
-      setError("");
-      setExtractedText("");
-      setSummary("");
+  try {
+    setLoading(true);
+    setError("");
+    setExtractedText("");
+    setSummary("");
 
-      const formData = new FormData();
-      formData.append("file", file);
+    const formData = new FormData();
+    formData.append("file", file);
 
-      const response = await axios.post(`${BACKEND_URL}/api/extract`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+    const response = await axios.post(
+      "https://document-summary-assistant-camd.onrender.com/api/extract",
+      formData,
+      { headers: { "Content-Type": "multipart/form-data" } }
+    );
 
-      setExtractedText(response.data.text);
-    } catch (err) {
-      console.error(err);
-      setError("Failed to extract text. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
+    setExtractedText(response.data.text);
+  } catch (err) {
+    console.error(err);
+    setError("Failed to extract text. Please try again.");
+  } finally {
+    setLoading(false);
+  }
+};
 
-  const handleSummarize = async () => {
-    if (!extractedText) return setError("Please extract text first!");
+const handleSummarize = async () => {
+  if (!extractedText) return setError("Please extract text first!");
 
-    try {
-      setLoading(true);
-      setError("");
+  try {
+    setLoading(true);
+    setError("");
 
-      const response = await axios.post(`${BACKEND_URL}/api/summarize`, {
-        text: extractedText,
-        length: summaryLength,
-      });
+    const response = await axios.post(
+      "https://document-summary-assistant-camd.onrender.com/api/summarize",
+      { text: extractedText, length: summaryLength }
+    );
 
-      setSummary(response.data.summary);
-    } catch (err) {
-      console.error(err);
-      setError("Failed to generate summary.");
-    } finally {
-      setLoading(false);
-    }
-  };
+    setSummary(response.data.summary);
+  } catch (err) {
+    console.error(err);
+    setError("Failed to generate summary.");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
@@ -91,8 +94,8 @@ export default function App() {
           {...getRootProps()}
           className={`border-2 border-dashed rounded-2xl p-20 w-full max-w-xl text-center cursor-pointer transition ${
             isDragActive
-              ? "border-blue-800 bg-blue-50"
-              : "border-gray-700 hover:border-blue-400"
+              ? "border-blue-800 bg-blue-500"
+              : "border-gray-700 hover:border-blue-500"
           }`}
         >
           <input {...getInputProps()} />
