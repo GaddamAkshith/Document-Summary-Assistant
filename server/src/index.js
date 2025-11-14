@@ -8,38 +8,31 @@ import { createRequire } from "module";
 
 const require = createRequire(import.meta.url);
 const pdfParse = require("pdf-parse");
-
 dotenv.config();
 
 const app = express();
 
-// -------------- GLOBAL CORS FIX --------------
 app.use(
   cors({
     origin: [
       "http://localhost:5173",
       "https://document-summary-assistant-drab.vercel.app",
     ],
-    methods: ["GET", "POST", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true,
+    methods: ["GET", "POST"],
+    allowedHeaders: ["Content-Type"],
   })
 );
 
-// Allow preflight for all paths
-app.options("*", cors());
-
 app.use(express.json());
 
-// Multer upload config
 const upload = multer({ dest: "uploads/" });
 
-// Health Check
 app.get("/", (req, res) => {
-  res.send(" Document Summary Assistant Backend Running!");
+  res.send("Document Summary Assistant Backend Running!");
 });
 
-// -------------- EXTRACT TEXT (PDF + IMAGE) --------------
+
+
 app.post("/api/extract", upload.single("file"), async (req, res) => {
   try {
     const filePath = req.file.path;
@@ -69,44 +62,66 @@ app.post("/api/extract", upload.single("file"), async (req, res) => {
   }
 });
 
-// -------------- GENERATE SUMMARY --------------
+
+// app.post("/api/summarize", async (req, res) => {
+//   try {
+//     const { text, length } = req.body;
+
+//     if (!text || text.trim().length < 50) {
+//       return res.status(400).json({ error: "Text is too short to summarize." });
+//     }
+
+//     const { pipeline } = await import("@xenova/transformers");
+//     const summarizer = await pipeline("summarization", "sshleifer/distilbart-cnn-6-6");
+
+//     let maxLen, minLen;
+//     if (length === "short") {
+//       minLen = 50;
+//       maxLen = 100;
+//     } else if (length === "medium") {
+//       minLen = 120;
+//       maxLen = 250;
+//     } else {
+//       minLen = 250;
+//       maxLen = 500;
+//     }
+
+//     const result = await summarizer(text, {
+//       min_length: minLen,
+//       max_length: maxLen,
+//       no_repeat_ngram_size: 3,
+//     });
+
+//     res.json({ summary: result[0].summary_text });
+
+//   } catch (error) {
+//     console.error("❌ Summary generation error:", error);
+//     return res.status(500).json({ error: "Summarization failed." });
+//   }
+// });
+
+
 app.post("/api/summarize", async (req, res) => {
   try {
     const { text, length } = req.body;
-
     if (!text || text.trim().length < 50) {
       return res.status(400).json({ error: "Text is too short to summarize." });
     }
 
-    const { pipeline } = await import("@xenova/transformers");
-    const summarizer = await pipeline("summarization", "sshleifer/distilbart-cnn-6-6");
+    let sentences = text.split(/(?<=[.!?])\s+/); // Split into sentences
+    let summaryCount =
+      length === "short" ? 3 : length === "medium" ? 5 : 8;
 
-    let maxLen, minLen;
-    if (length === "short") {
-      minLen = 50;
-      maxLen = 100;
-    } else if (length === "medium") {
-      minLen = 120;
-      maxLen = 250;
-    } else {
-      minLen = 250;
-      maxLen = 500;
-    }
+    const summary = sentences.slice(0, summaryCount).join(" ");
 
-    const result = await summarizer(text, {
-      min_length: minLen,
-      max_length: maxLen,
-      no_repeat_ngram_size: 3,
-    });
-
-    res.json({ summary: result[0].summary_text });
+    res.json({ summary });
 
   } catch (error) {
-    console.error("❌ Summary generation error:", error);
-    return res.status(500).json({ error: "Summarization failed." });
+    console.error(" Summary generation error:", error);
+    res.status(500).json({ error: "Summarization failed." });
   }
 });
 
-// -------------- START SERVER --------------
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
