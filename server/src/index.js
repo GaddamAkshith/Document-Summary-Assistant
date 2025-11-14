@@ -19,7 +19,7 @@ app.use(
       "http://localhost:5173",
       "https://document-summary-assistant-drab.vercel.app",
     ],
-    methods: ["GET", "POST"],
+    methods: ["GET", "POST", "OPTIONS"],
     allowedHeaders: ["Content-Type"],
   })
 );
