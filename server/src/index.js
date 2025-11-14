@@ -4,17 +4,36 @@ import multer from "multer";
 import fs from "fs";
 import Tesseract from "tesseract.js";
 import dotenv from "dotenv";
-import { createRequire } from "module"; 
+import { createRequire } from "module";
+
 const require = createRequire(import.meta.url);
 const pdfParse = require("pdf-parse");
+
 dotenv.config();
+
 const app = express();
-app.use(cors());
-app.use(express.json());
-const upload = multer({ dest: "uploads/" });
-app.get("/", (req, res) => {
-  res.send(" Document Summary Assistant Backend Running!");
+
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "https://document-summary-assistant-drab.vercel.app",
+    ],
+    methods: ["GET", "POST"],
+    allowedHeaders: ["Content-Type"],
+  })
+);
+
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Content-Type");
+  next();
 });
+
+app.use(express.json());
+
+const upload = multer({ dest: "uploads/" });
+
 app.post("/api/extract", upload.single("file"), async (req, res) => {
   try {
     const filePath = req.file.path;
