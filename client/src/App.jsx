@@ -27,26 +27,20 @@ export default function App() {
       setError("");
     },
   });
-
-  // Upload and Extract Text
   const handleUpload = async () => {
     if (!file) return setError("Please select a file first!");
-
     try {
       setLoading(true);
       setError("");
       setExtractedText("");
       setSummary("");
-
       const formData = new FormData();
       formData.append("file", file);
-
       const response = await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}/api/extract`,
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
-
       setExtractedText(response.data.text);
     } catch (err) {
       console.error(err);
@@ -147,7 +141,6 @@ export default function App() {
             <p className="text-gray-700 whitespace-pre-wrap">{summary}</p>
           </div>
         )}
-
         {error && <p className="text-red-500 mt-4 font-medium">{error}</p>}
       </div>
       <About />
