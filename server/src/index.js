@@ -13,25 +13,28 @@ dotenv.config();
 
 const app = express();
 
+
 app.use(
   cors({
     origin: [
       "http://localhost:5173",
       "https://document-summary-assistant-drab.vercel.app",
     ],
-    methods: "GET,POST",
-    allowedHeaders: "Content-Type",
+    methods: ["GET", "POST"],
+    allowedHeaders: ["Content-Type"],
   })
 );
 
 app.use(express.json());
 
+
 const upload = multer({ dest: "uploads/" });
 
-/
+
 app.get("/", (req, res) => {
   res.send(" Document Summary Assistant Backend Running!");
 });
+
 
 app.post("/api/extract", upload.single("file"), async (req, res) => {
   try {
@@ -53,7 +56,7 @@ app.post("/api/extract", upload.single("file"), async (req, res) => {
       return res.status(400).json({ error: "Unsupported file type" });
     }
 
-    fs.unlinkSync(filePath); // cleanup temp file
+    fs.unlinkSync(filePath);
     res.json({ text: extractedText });
 
   } catch (error) {
