@@ -8,7 +8,6 @@ import Features from "./components/Features";
 import HowItWorks from "./components/HowItWorks";
 import FAQ from "./components/FAQ";
 
-
 export default function App() {
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -16,8 +15,6 @@ export default function App() {
   const [summary, setSummary] = useState("");
   const [summaryLength, setSummaryLength] = useState("short");
   const [error, setError] = useState("");
-
-  
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: {
       "application/pdf": [".pdf"],
@@ -31,7 +28,7 @@ export default function App() {
     },
   });
 
- 
+  // Upload and Extract Text
   const handleUpload = async () => {
     if (!file) return setError("Please select a file first!");
 
@@ -44,9 +41,11 @@ export default function App() {
       const formData = new FormData();
       formData.append("file", file);
 
-      const response = await axios.post("http://localhost:5000/api/extract", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const response = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/api/extract`,
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
 
       setExtractedText(response.data.text);
     } catch (err) {
@@ -58,16 +57,13 @@ export default function App() {
   };
   const handleSummarize = async () => {
     if (!extractedText) return setError("Please extract text first!");
-
     try {
       setLoading(true);
       setError("");
-
-      const response = await axios.post("http://localhost:5000/api/summarize", {
-        text: extractedText,
-        length: summaryLength,
-      });
-
+      const response = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/api/summarize`,
+        { text: extractedText, length: summaryLength }
+      );
       setSummary(response.data.summary);
     } catch (err) {
       console.error(err);
@@ -76,13 +72,10 @@ export default function App() {
       setLoading(false);
     }
   };
-
   return (
-<div className="min-h-screen flex flex-col bg-White-FAF1E8">
-
+    <div className="min-h-screen flex flex-col bg-gray-50">
       <Navbar />
-      
-      <div className="flex-grow w-full flex flex-col items-center justify-start pt-28 p-6">
+      <div id="uploadSection" className="flex-grow w-full flex flex-col items-center justify-start pt-28 p-6">
         <h1 className="text-3xl font-bold text-gray-800 mb-6">
           Document Summary Assistant
         </h1>
@@ -92,7 +85,8 @@ export default function App() {
             isDragActive
               ? "border-blue-800 bg-blue-50"
               : "border-gray-700 hover:border-blue-400"
-          }`}>
+          }`}
+        >
           <input {...getInputProps()} />
           {isDragActive ? (
             <p className="text-blue-600 font-medium">Drop your file here...</p>
@@ -126,6 +120,7 @@ export default function App() {
               Extracted Text
             </h2>
             <p className="text-gray-700 whitespace-pre-wrap mb-4">{extractedText}</p>
+
             <div className="flex items-center justify-between">
               <select
                 className="border rounded-md p-2 text-gray-700"
@@ -139,7 +134,8 @@ export default function App() {
               <button
                 onClick={handleSummarize}
                 className="px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400"
-                disabled={loading}>
+                disabled={loading}
+              >
                 {loading ? "Summarizing..." : "Generate Summary"}
               </button>
             </div>
@@ -151,17 +147,13 @@ export default function App() {
             <p className="text-gray-700 whitespace-pre-wrap">{summary}</p>
           </div>
         )}
-        {error && (
-          <p className="text-red-500 mt-4 font-medium">{error}</p>
-        )}
+
+        {error && <p className="text-red-500 mt-4 font-medium">{error}</p>}
       </div>
-      <div><About />
-      <Features /> 
+      <About />
+      <Features />
       <HowItWorks />
       <FAQ />
-      
-
-      </div>
       <Footer />
     </div>
   );
