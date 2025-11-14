@@ -50,35 +50,28 @@ app.post("/api/extract", upload.single("file"), async (req, res) => {
   }
 });
 app.post("/api/summarize", async (req, res) => {
+  console.log("📩 Summarize API Hit");
   try {
     const { text, length } = req.body;
+
     if (!text || text.trim().length < 50) {
       return res.status(400).json({ error: "Text is too short to summarize." });
     }
-    const { pipeline } = await import("@xenova/transformers");
-    const summarizer = await pipeline(
-      "summarization",
-      "Xenova/bart-large-cnn"
-    );
-    let maxLen, minLen;
-    if (length === "short") {
-      minLen = 50;
-      maxLen = 100;
-    } else if (length === "medium") {
-      minLen = 120;
-      maxLen = 250;
-    } else {
-      minLen = 250;
-      maxLen = 500;
-    }
-    const result = await summarizer(text, {
-      min_length: minLen,
-      max_length: maxLen,
-      no_repeat_ngram_size: 3,
-    });
-    res.json({ summary: result[0].summary_text });
+
+    // Split into sentences
+    let sentences = text.split(/(?<=[.!?])\s+/);
+
+    // Choose summary length
+    let summaryCount =
+      length === "short" ? 3 :
+      length === "medium" ? 5 :
+      8;
+
+    const summary = sentences.slice(0, summaryCount).join(" ");
+
+    return res.json({ summary });
   } catch (error) {
-    console.error(" Summary generation error:", error);
+    console.error("❌ Summary generation error:", error);
     return res.status(500).json({ error: "Summarization failed." });
   }
 });
