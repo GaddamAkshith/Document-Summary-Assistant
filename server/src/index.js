@@ -13,15 +13,7 @@ dotenv.config();
 
 const app = express();
 
-app.use(
-  cors({
-    origin: "*",
-    methods: ["GET", "POST", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
-
-app.options("*", cors());
+app.use(cors());
 
 app.use(express.json());
 
@@ -71,5 +63,10 @@ app.post("/api/summarize", async (req, res) => {
 
     return res.json({ summary });
   } catch (error) {
+    console.error("Summarize error:", error);
+    res.status(500).json({ error: "Summarization failed" });
+  }
+});
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(` Server running on port ${PORT}`));
