@@ -44,7 +44,7 @@ export default function App() {
     const formData = new FormData();
     formData.append("file", file);
 
-    const response = await axios.post("/api/extract", formData, {
+    const response = await axios.post(`${BACKEND_URL}/api/extract`, formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
 
