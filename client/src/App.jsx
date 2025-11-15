@@ -9,7 +9,7 @@ import HowItWorks from "./components/HowItWorks";
 import FAQ from "./components/FAQ";
 
 
-const BACKEND_URL = "https://document-summary-assistant-camd.onrender.com";
+const BACKEND_URL = "https://document-summary-assistant.onrender.com";
 
 export default function App() {
   const [file, setFile] = useState(null);
@@ -44,7 +44,7 @@ export default function App() {
     const formData = new FormData();
     formData.append("file", file);
 
-    const response = await axios.post("/api/extract", formData, {
+    const response = await axios.post(`${BACKEND_URL}/api/extract`, formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
 
