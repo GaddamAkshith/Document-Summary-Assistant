@@ -29,24 +29,26 @@ const upload = multer({ dest: "uploads/" });
 
 app.post("/api/extract", upload.single("file"), async (req, res) => {
   try {
+    if (!req.file) return res.status(400).json({ error: "No file uploaded" });
+
     const filePath = req.file.path;
     const mimeType = req.file.mimetype;
     let extractedText = "";
+
     if (mimeType === "application/pdf") {
       const dataBuffer = fs.readFileSync(filePath);
       const data = await pdfParse(dataBuffer);
       extractedText = data.text;
-    } else if (mimeType.startsWith("image/")) {
-      const result = await Tesseract.recognize(filePath, "eng");
-      extractedText = result.data.text;
     } else {
-      return res.status(400).json({ error: "Unsupported file type" });
+      return res.status(400).json({ error: "Only PDF supported for now" });
     }
+
     fs.unlinkSync(filePath);
-    res.json({ text: extractedText });
+    return res.json({ text: extractedText });
+
   } catch (error) {
-    console.error(" Extraction error:", error);
-    res.status(500).json({ error: "Text extraction failed" });
+    console.error("Extraction error:", error);
+    return res.status(500).json({ error: "Text extraction failed" });
   }
 });
 app.post("/api/summarize", async (req, res) => {
