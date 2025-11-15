@@ -21,6 +21,10 @@ const upload = multer({ dest: "uploads/" });
 
 app.post("/api/extract", upload.single("file"), async (req, res) => {
   try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+
     const filePath = req.file.path;
     const mimeType = req.file.mimetype;
     let extractedText = "";
@@ -36,7 +40,7 @@ app.post("/api/extract", upload.single("file"), async (req, res) => {
       return res.status(400).json({ error: "Unsupported file type" });
     }
 
-    fs.unlinkSync(filePath); // delete uploaded file
+    fs.unlinkSync(filePath);
     res.json({ text: extractedText });
   } catch (error) {
     console.error(" Extraction error:", error);
