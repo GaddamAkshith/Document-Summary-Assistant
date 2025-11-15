@@ -23,7 +23,7 @@ app.get("/", (req, res) => {
   res.send(" Document Summary Assistant Backend Running!");
 });
 
-// -------------------- TEXT EXTRACTION --------------------
+
 app.post("/api/extract", upload.single("file"), async (req, res) => {
   try {
     const filePath = req.file.path;
@@ -51,7 +51,7 @@ app.post("/api/extract", upload.single("file"), async (req, res) => {
     res.json({ text: extractedText });
 
   } catch (error) {
-    console.error("❌ Extraction error:", error);
+    console.error(" Extraction error:", error);
     res.status(500).json({ error: "Text extraction failed" });
   }
 });
@@ -89,11 +89,11 @@ app.post("/api/summarize", async (req, res) => {
     res.json({ summary: result[0].summary_text });
 
   } catch (error) {
-    console.error("❌ Summary generation error:", error);
+    console.error(" Summary generation error:", error);
     return res.status(500).json({ error: "Summarization failed." });
   }
 });
 
 // -------------------- SERVER --------------------
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(` Server running on port ${PORT}`));
