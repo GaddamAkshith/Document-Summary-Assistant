@@ -12,45 +12,52 @@ const pdfParse = require("pdf-parse");
 dotenv.config();
 
 const app = express();
-
-app.use(
-  cors({
-    origin: "*",
-    methods: ["GET", "POST", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
-
-app.options("*", cors());
-
+app.use(cors());
 app.use(express.json());
 
+// File upload config
 const upload = multer({ dest: "uploads/" });
 
+// Health Check Route
+app.get("/", (req, res) => {
+  res.send(" Document Summary Assistant Backend Running!");
+});
+
+// -------------------- TEXT EXTRACTION --------------------
 app.post("/api/extract", upload.single("file"), async (req, res) => {
   try {
     const filePath = req.file.path;
     const mimeType = req.file.mimetype;
+
     let extractedText = "";
+
+    // PDF Processing
     if (mimeType === "application/pdf") {
       const dataBuffer = fs.readFileSync(filePath);
       const data = await pdfParse(dataBuffer);
       extractedText = data.text;
+
+    // Image OCR
     } else if (mimeType.startsWith("image/")) {
       const result = await Tesseract.recognize(filePath, "eng");
       extractedText = result.data.text;
+
     } else {
       return res.status(400).json({ error: "Unsupported file type" });
     }
-    fs.unlinkSync(filePath);
+
+    fs.unlinkSync(filePath); // delete temp file
+
     res.json({ text: extractedText });
+
   } catch (error) {
-    console.error(" Extraction error:", error);
+    console.error("❌ Extraction error:", error);
     res.status(500).json({ error: "Text extraction failed" });
   }
 });
+
+// -------------------- SUMMARY GENERATION --------------------
 app.post("/api/summarize", async (req, res) => {
-  console.log("📩 Summarize API Hit");
   try {
     const { text, length } = req.body;
 
@@ -58,18 +65,35 @@ app.post("/api/summarize", async (req, res) => {
       return res.status(400).json({ error: "Text is too short to summarize." });
     }
 
-    // Split into sentences
-    let sentences = text.split(/(?<=[.!?])\s+/);
+    const { pipeline } = await import("@xenova/transformers");
+    const summarizer = await pipeline("summarization", "facebook/bart-large-cnn");
 
-    // Choose summary length
-    let summaryCount =
-      length === "short" ? 3 :
-      length === "medium" ? 5 :
-      8;
+    let maxLen, minLen;
+    if (length === "short") {
+      minLen = 50;
+      maxLen = 100;
+    } else if (length === "medium") {
+      minLen = 120;
+      maxLen = 250;
+    } else {
+      minLen = 250;
+      maxLen = 500;
+    }
 
-    const summary = sentences.slice(0, summaryCount).join(" ");
+    const result = await summarizer(text, {
+      min_length: minLen,
+      max_length: maxLen,
+      no_repeat_ngram_size: 3,
+    });
 
-    return res.json({ summary });
+    res.json({ summary: result[0].summary_text });
+
   } catch (error) {
+    console.error("❌ Summary generation error:", error);
+    return res.status(500).json({ error: "Summarization failed." });
+  }
+});
+
+// -------------------- SERVER --------------------
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(` Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
