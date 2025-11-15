@@ -1,15 +1,13 @@
 import React, { useState } from "react";
 import { useDropzone } from "react-dropzone";
 import axios from "axios";
+
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import About from "./components/About";
 import Features from "./components/Features";
 import HowItWorks from "./components/HowItWorks";
 import FAQ from "./components/FAQ";
-
-
-const BACKEND_URL = "https://document-summary-assistant.onrender.com";
 
 export default function App() {
   const [file, setFile] = useState(null);
@@ -32,52 +30,55 @@ export default function App() {
     },
   });
 
+  // Upload and Extract Text
   const handleUpload = async () => {
-  if (!file) return setError("Please select a file first!");
+    if (!file) return setError("Please select a file first!");
 
-  try {
-    setLoading(true);
-    setError("");
-    setExtractedText("");
-    setSummary("");
+    try {
+      setLoading(true);
+      setError("");
+      setExtractedText("");
+      setSummary("");
 
-    const formData = new FormData();
-    formData.append("file", file);
+      const formData = new FormData();
+      formData.append("file", file);
 
-    const response = await axios.post(`${BACKEND_URL}/api/extract`, formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
+      const response = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/api/extract`,
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
 
-    setExtractedText(response.data.text);
-  } catch (err) {
-    console.error(err);
-    setError("Failed to extract text. Please try again.");
-  } finally {
-    setLoading(false);
-  }
-};
+      setExtractedText(response.data.text);
+    } catch (err) {
+      console.error(err);
+      setError("Failed to extract text. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-const handleSummarize = async () => {
-  if (!extractedText) return setError("Please extract text first!");
+  // Summarize Text
+  const handleSummarize = async () => {
+    if (!extractedText) return setError("Please extract text first!");
 
-  try {
-    setLoading(true);
-    setError("");
+    try {
+      setLoading(true);
+      setError("");
 
-    const response = await axios.post(
-      "https://document-summary-assistant-camd.onrender.com/api/summarize",
-      { text: extractedText, length: summaryLength }
-    );
+      const response = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/api/summarize`,
+        { text: extractedText, length: summaryLength }
+      );
 
-    setSummary(response.data.summary);
-  } catch (err) {
-    console.error(err);
-    setError("Failed to generate summary.");
-  } finally {
-    setLoading(false);
-  }
-};
-
+      setSummary(response.data.summary);
+    } catch (err) {
+      console.error(err);
+      setError("Failed to generate summary.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
@@ -92,8 +93,8 @@ const handleSummarize = async () => {
           {...getRootProps()}
           className={`border-2 border-dashed rounded-2xl p-20 w-full max-w-xl text-center cursor-pointer transition ${
             isDragActive
-              ? "border-blue-800 bg-blue-500"
-              : "border-gray-700 hover:border-blue-500"
+              ? "border-blue-800 bg-blue-50"
+              : "border-gray-700 hover:border-blue-400"
           }`}
         >
           <input {...getInputProps()} />
@@ -115,6 +116,7 @@ const handleSummarize = async () => {
             <p className="text-sm text-gray-500">
               Size: {(file.size / 1024).toFixed(2)} KB
             </p>
+
             <button
               onClick={handleUpload}
               className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
@@ -164,10 +166,12 @@ const handleSummarize = async () => {
         {error && <p className="text-red-500 mt-4 font-medium">{error}</p>}
       </div>
 
+      {/* Sections */}
       <About />
       <Features />
       <HowItWorks />
       <FAQ />
+
       <Footer />
     </div>
   );
